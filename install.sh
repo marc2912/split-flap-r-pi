@@ -25,6 +25,9 @@ set -u
 LOG_FILE="/var/log/splitflap_install.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
+# Catch any early exits and log them
+trap 'echo "⚠️ Script exited early at line $LINENO with exit code $?"; exit 1' ERR
+
 echo "🔄 Starting SplitFlap installation..."
 
 if [ "$(id -u)" -ne 0 ]; then
@@ -66,13 +69,25 @@ retry sudo systemctl restart hostapd dnsmasq
 
 if ! id "splitflap" &>/dev/null; then
     echo "➕ Creating splitflap system user..."
-    sudo useradd -m -r -s /bin/false splitflap
+    sudo useradd -m -r -s /bin/bash splitflap
 else
     echo "⚠️ User 'splitflap' already exists. Verifying configuration..."
+    sudo usermod -s /bin/bash splitflap
 fi
 
 sudo chown -R splitflap:splitflap /home/splitflap
 sudo chmod 755 /home/splitflap
+
+# Set up npm for the splitflap user to prevent permission errors
+echo "🔧 Configuring npm global directory for splitflap user..."
+sudo -u splitflap mkdir -p /home/splitflap/.npm-global
+sudo -u splitflap npm config set prefix /home/splitflap/.npm-global
+
+echo 'export PATH=/home/splitflap/.npm-global/bin:$PATH' | sudo tee -a /home/splitflap/.bashrc > /dev/null
+sudo -u splitflap bash -c "source /home/splitflap/.bashrc"
+
+# Install ts-node in the user’s npm directory
+retry sudo -u splitflap npm install -g ts-node
 
 sudo mkdir -p /home/splitflap/.npm
 sudo chown -R splitflap:splitflap /home/splitflap/.npm
@@ -94,7 +109,7 @@ auth_algs=1
 wpa=2
 wpa_key_mgmt=WPA-PSK
 rsn_pairwise=CCMP
-ignore_broadcast_ssid=1
+ignore_broadcast_ssid=0
 EOF
 
 retry sudo systemctl restart hostapd
@@ -108,29 +123,34 @@ cd /opt/splitflap
 
 retry sudo -u splitflap /usr/bin/npm install --omit=dev
 
-if sudo -u splitflap pm2 list | grep -q "splitflap"; then
-    echo "⚠️ SplitFlap process already exists in PM2. Restarting..."
-    retry sudo -u splitflap pm2 restart splitflap
-else
-    echo "🚀 Starting SplitFlap service with PM2..."
-    retry sudo -u splitflap pm2 start /usr/bin/node --name splitflap -- /opt/splitflap/src/server.ts --loader ts-node/esm
+# Ensure PM2 systemd service is properly generated and enabled
+echo "🔄 Configuring PM2 to start on boot..."
+sudo usermod -s /bin/bash splitflap
+retry pm2 startup systemd -u splitflap --hp /home/splitflap
+
+if [ ! -f "/etc/systemd/system/pm2-splitflap.service" ]; then
+    echo "⚠️ PM2 systemd service file is missing! Attempting to regenerate..."
+    retry pm2 startup systemd -u splitflap --hp /home/splitflap
 fi
 
-sudo -u splitflap pm2 save
+sudo chmod 644 /etc/systemd/system/pm2-splitflap.service
+sudo chown root:root /etc/systemd/system/pm2-splitflap.service
 
-# Ensure PM2 resurrects processes after reboot
-echo "🔄 Ensuring PM2 resurrects processes on reboot..."
-retry sudo -u splitflap pm2 resurrect
+retry sudo systemctl daemon-reload
+retry sudo systemctl enable pm2-splitflap
+retry sudo systemctl restart pm2-splitflap
+
+# Get the correct ts-node path for the splitflap user
+TS_NODE_PATH="/home/splitflap/.npm-global/bin/ts-node"
+echo "✅ Using ts-node path: $TS_NODE_PATH"
+
+# Start SplitFlap app in PM2 and ensure persistence
+echo "🚀 Starting SplitFlap app with PM2..."
+retry sudo -u splitflap env PATH="/home/splitflap/.npm-global/bin:$PATH" pm2 start "$TS_NODE_PATH" --name splitflap -- /opt/splitflap/src/server.ts
 retry sudo -u splitflap pm2 save
 
-retry sudo systemctl enable pm2-splitflap
 
-echo "@reboot splitflap /usr/local/bin/pm2 resurrect" | sudo tee /etc/cron.d/pm2-resurrect > /dev/null
-sudo chmod 644 /etc/cron.d/pm2-resurrect
-sudo chown root:root /etc/cron.d/pm2-resurrect
-
-echo "🚀 PM2 setup complete. The process should persist after reboot."
-
+echo "✅ Script completed successfully. Rebooting now..."
 sleep 3
 echo "🔄 Installation complete. Rebooting now..."
 sudo reboot || echo "❌ Failed to reboot. Please manually reboot the system."
