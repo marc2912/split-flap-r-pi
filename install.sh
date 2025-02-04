@@ -1,12 +1,13 @@
 #!/bin/bash
-# Ensure script runs as root
+set -e  # Exit immediately on any error
+
 if [ "$(id -u)" -ne 0 ]; then
     echo "This script must be run as root. Try: sudo ./install.sh"
     exit 1
 fi
 
 echo "Updating system packages..."
-sudo apt update && sudo apt install -y hostapd dnsmasq nodejs npm pm2
+sudo apt update && sudo apt install -y hostapd dnsmasq nodejs npm git
 
 echo "Setting Wi-Fi country to enable wireless functionality..."
 sudo raspi-config nonint do_wifi_country US  # Change 'US' if needed
@@ -14,8 +15,13 @@ sudo raspi-config nonint do_wifi_country US  # Change 'US' if needed
 echo "Unblocking Wi-Fi (rfkill)..."
 sudo rfkill unblock wifi
 
+echo "Installing PM2 process manager..."
+sudo npm install -g pm2
+
 echo "Disabling default services..."
-sudo systemctl disable hostapd dnsmasq
+sudo systemctl unmask hostapd dnsmasq
+sudo systemctl enable hostapd dnsmasq
+sudo systemctl restart hostapd dnsmasq
 
 echo "Creating splitflap system user..."
 sudo useradd -r -s /bin/false splitflap
@@ -24,6 +30,7 @@ sudo useradd -r -s /bin/false splitflap
 echo "splitflap ALL=(ALL) NOPASSWD: /bin/cp /tmp/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf, /sbin/wpa_cli -i wlan0 reconfigure" | sudo tee /etc/sudoers.d/splitflap
 
 echo "Configuring Wi-Fi Access Point..."
+sudo mkdir -p /etc/hostapd
 cat <<EOF | sudo tee /etc/hostapd/hostapd.conf
 interface=wlan0
 driver=nl80211
