@@ -13,14 +13,18 @@ A Raspberry Pi-based controller for a modular split flap display.
 
 To install and run the project, use the following commands:
 
-1. Clone the repository:
-   **git clone https://github.com/YOUR_GITHUB_USERNAME/SplitFlap-Pi.git**
-2. Navigate into the project directory:
+1. Install Raspberry Pi OS Lite via Raspberry Pi Imager
+2. Create a user account and enable SSH
+3. Connect Raspberry Pi to Ethernet and power on.
+4. SSH into the Pi
+   **ssh pi@<RPI_IP_ADDRESS>**s
+5. Clone the repository
+   **git clone https://github.com/marc2912/SplitFlap-Pi.git**
+6. Navigate into the project directory:
    **cd SplitFlap-Pi**
-3. Install dependencies:
-   **npm install**
-4. Start the development server:
-   **npm run dev**
+7. Run the install script
+   **sudo ./install.sh**
+
 
 ---
 
