@@ -118,15 +118,10 @@ fi
 
 sudo -u splitflap pm2 save
 
-echo "⚙️ Setting up PM2 startup script..."
-PM2_STARTUP_CMD=$(sudo -u splitflap pm2 startup systemd -u splitflap --hp /home/splitflap | grep "sudo" || true)
-if [[ -z "$PM2_STARTUP_CMD" ]]; then
-    echo "❌ Failed to generate PM2 startup command. Exiting."
-    exit 1
-fi
-
-echo "🔄 Running PM2 startup command: $PM2_STARTUP_CMD"
-eval "$PM2_STARTUP_CMD"
+# Ensure PM2 resurrects processes after reboot
+echo "🔄 Ensuring PM2 resurrects processes on reboot..."
+retry sudo -u splitflap pm2 resurrect
+retry sudo -u splitflap pm2 save
 
 retry sudo systemctl enable pm2-splitflap
 
