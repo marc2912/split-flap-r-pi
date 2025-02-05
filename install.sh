@@ -15,6 +15,9 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
+# Get the username of the non-root user running the script
+USERNAME="$(logname)"
+
 # Function to retry commands
 retry() {
     local n=1
@@ -54,7 +57,7 @@ echo "✅ Node.js version: $(node -v)"
 # Ensure /opt/splitflap exists and set correct permissions
 echo "📂 Ensuring correct permissions for /opt/splitflap..."
 mkdir -p /opt/splitflap
-chown -R "$(whoami)":"$(whoami)" /opt/splitflap
+chown -R "$USERNAME":"$USERNAME" /opt/splitflap
 chmod -R 755 /opt/splitflap
 
 # Move into /opt/splitflap
@@ -62,36 +65,31 @@ cd /opt/splitflap
 
 # Install Node.js dependencies
 echo "📦 Installing Node.js dependencies..."
-npm install --omit=dev
+sudo -u "$USERNAME" npm install --omit=dev
 
 # Compile TypeScript
 echo "🔧 Compiling TypeScript..."
-npm run build
+sudo -u "$USERNAME" npm run build
 
-# Install PM2 globally
+# Install PM2 **as the user, NOT root**
 echo "📦 Installing PM2..."
-retry npm install -g pm2
+sudo -u "$USERNAME" npm install -g pm2
 
-# Ensure PM2 starts on boot
-echo "🔄 Setting up PM2..."
-pm2 startup systemd
-
-# Ensure PM2 starts on boot for the correct user
-echo "🔄 Configuring PM2 to start on boot..."
-sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u "$(whoami)" --hp /home/"$(whoami)"
+# Ensure PM2 starts on boot **for the user**
+echo "🔄 Setting up PM2 for $USERNAME..."
+sudo -u "$USERNAME" pm2 startup systemd --hp "/home/$USERNAME"
 
 # Start SplitFlap with PM2
-echo "🚀 Starting SplitFlap with PM2 as $(logname)..."
-sudo -u "$(logname)" pm2 start /opt/splitflap/dist/server.js --name splitflap
+echo "🚀 Starting SplitFlap with PM2 as $USERNAME..."
+sudo -u "$USERNAME" pm2 start /opt/splitflap/dist/server.js --name splitflap
 
-# Save PM2 process list properly
+# Save PM2 process list **under the correct user**
 echo "💾 Saving PM2 process list..."
-pm2 save --force
+sudo -u "$USERNAME" pm2 save
 
-# Reload PM2 service to ensure it applies
-echo "🔄 Reloading PM2 service..."
-sudo systemctl daemon-reload
-sudo systemctl enable pm2-"$(whoami)"
-sudo systemctl restart pm2-"$(whoami)"
+# Enable PM2 service to start on boot
+echo "🔄 Enabling PM2 service..."
+sudo systemctl enable pm2-"$USERNAME"
+sudo systemctl restart pm2-"$USERNAME"
 
 echo "✅ Installation complete!"
