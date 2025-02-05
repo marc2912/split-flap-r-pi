@@ -76,6 +76,10 @@ retry npm install -g pm2
 echo "🔄 Setting up PM2..."
 pm2 startup systemd
 
+# Ensure PM2 starts on boot for the correct user
+echo "🔄 Configuring PM2 to start on boot..."
+sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u "$(whoami)" --hp /home/"$(whoami)"
+
 # Start SplitFlap with PM2
 echo "🚀 Starting SplitFlap with PM2 as $(logname)..."
 sudo -u "$(logname)" pm2 start /opt/splitflap/dist/server.js --name splitflap
