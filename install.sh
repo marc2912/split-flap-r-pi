@@ -4,10 +4,16 @@ set -e
 set -o pipefail
 set -u
 
-LOG_FILE="$HOME/split-flap-r-pi/splitflap_install.log"
+LOG_FILE="/var/log/splitflap_install.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo "🔄 Starting SplitFlap installation..."
+
+# Ensure script is run as root
+if [ "$(id -u)" -ne 0 ]; then
+    echo "❌ This script must be run as root. Try: sudo ./install.sh"
+    exit 1
+fi
 
 # Function to retry commands
 retry() {
@@ -28,78 +34,67 @@ retry() {
     done
 }
 
-# Prompt user to manually run required system updates
-echo "⚠️  Please run the following commands manually before proceeding:"
-echo "    sudo apt-get update && sudo apt-get upgrade -y"
-echo "    sudo apt-get install -y curl"
-read -p "Press Enter to continue once these steps are complete..."
+# Update system packages
+echo "📦 Updating system packages..."
+retry apt-get update
+retry apt-get upgrade -y
+
+# Install dependencies
+echo "📦 Installing required dependencies..."
+retry apt-get install -y curl
 
 # Install Node.js v22.13.1 from NodeSource
-echo "🔧 Ensuring Node.js 22.x is installed..."
-sudo apt-get remove --purge -y nodejs
-curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
-sudo apt-get install -y nodejs
+echo "🔧 Installing Node.js v22.13.1..."
+retry curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+retry apt-get install -y nodejs
 
 # Verify Node.js version
 echo "✅ Node.js version: $(node -v)"
 
-chmod -R 755 "$HOME/split-flap-r-pi"
+# Create splitflap user if it doesn’t exist
+if ! id "splitflap" &>/dev/null; then
+    echo "➕ Creating 'splitflap' system user..."
+    useradd -m -r -s /bin/bash splitflap
+else
+    echo "⚠️ User 'splitflap' already exists."
+fi
 
-# Move into SplitFlap directory
-cd "$HOME/split-flap-r-pi"
+# Move the splitflap project to /opt/
+echo "📂 Updating permissions for /opt/splitflap..."
+chown -R splitflap:splitflap /opt/splitflap
+chmod -R 755 /opt/splitflap
 
 # Install Node.js dependencies
 echo "📦 Installing Node.js dependencies..."
-npm install --omit=dev
+sudo -u splitflap npm install --omit=dev --prefix /opt/splitflap
 
 # Compile TypeScript
 echo "🔧 Compiling TypeScript..."
-npm run build
+sudo -u splitflap npm run build --prefix /opt/splitflap
 
-# Configure npm global directory
-echo "🔧 Configuring npm global directory..."
-mkdir -p "$HOME/.npm-global"
-npm config set prefix "$HOME/.npm-global"
+# Create systemd service file
+echo "🔧 Creating systemd service file..."
+cat <<EOF | tee /etc/systemd/system/splitflap.service
+[Unit]
+Description=SplitFlap Display Service
+After=network.target
 
-# Ensure PATH is updated for npm binaries
-echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
-echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.profile"
-echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bash_profile"
+[Service]
+ExecStart=/usr/bin/node /opt/splitflap/dist/server.js
+Restart=always
+User=splitflap
+WorkingDirectory=/opt/splitflap
+Environment=PATH=/usr/local/bin:/usr/bin:/bin
+Environment=NODE_ENV=production
 
-# Apply updated PATH
-export PATH="$HOME/.npm-global/bin:$PATH"
-source "$HOME/.bashrc"
-source "$HOME/.profile"
+[Install]
+WantedBy=multi-user.target
+EOF
 
-# Install PM2 globally
-echo "📦 Installing PM2..."
-npm install -g pm2
-
-# Ensure PM2 is properly installed
-if ! command -v pm2 &>/dev/null; then
-    echo "❌ PM2 installation failed. Exiting."
-    exit 1
-fi
-
-# Set up PM2 to start on boot
-echo "🔄 Configuring PM2 for auto-start..."
-eval "$(pm2 startup systemd -u "$(whoami)" --hp "$HOME" | tail -n 1)"
-
-# Start SplitFlap with PM2
-echo "🚀 Starting SplitFlap with PM2..."
-pm2 start "$HOME/split-flap-r-pi/dist/server.js" --name splitflap
-
-# Save PM2 process list
-echo "💾 Saving PM2 process list..."
-pm2 save
-
-# Enable PM2 service (user-level)
-echo "🔄 Enabling PM2 service..."
-systemctl --user enable pm2-$(whoami)
-systemctl --user restart pm2-$(whoami)
-
-# Ensure lingering is enabled so the user service runs on boot
-echo "🔄 Enabling lingering for $(whoami)..."
-sudo loginctl enable-linger "$(whoami)"
+# Reload systemd, enable service, and start it
+echo "🔄 Enabling and starting SplitFlap service..."
+systemctl daemon-reload
+systemctl enable splitflap
+systemctl start splitflap
 
 echo "✅ Installation complete!"
