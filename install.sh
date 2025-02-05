@@ -56,9 +56,27 @@ npm install --omit=dev
 echo "🔧 Compiling TypeScript..."
 npm run build
 
-# Install PM2 globally (user-level)
+# Configure npm global directory
+echo "🔧 Configuring npm global directory..."
+mkdir -p "$HOME/.npm-global"
+npm config set prefix "$HOME/.npm-global"
+
+# Ensure PATH is updated for npm binaries
+echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
+export PATH="$HOME/.npm-global/bin:$PATH"
+
+# Ensure PATH is correctly set within the script
+source "$HOME/.bashrc"
+
+# Install PM2 globally
 echo "📦 Installing PM2..."
 npm install -g pm2
+
+# Ensure PM2 is properly installed
+if ! command -v pm2 &>/dev/null; then
+    echo "❌ PM2 installation failed. Exiting."
+    exit 1
+fi
 
 # Set up PM2 to start on boot
 echo "🔄 Configuring PM2 for auto-start..."
@@ -68,13 +86,13 @@ pm2 startup systemd -u "$(whoami)" --hp "$HOME"
 echo "🚀 Starting SplitFlap with PM2..."
 pm2 start "$HOME/split-flap-r-pi/dist/server.js" --name splitflap
 
-# Save PM2 process list to ensure auto-restart on boot
+# Save PM2 process list
 echo "💾 Saving PM2 process list..."
 pm2 save
 
-# Enable PM2 service to start on boot
+# Enable PM2 service (user-level)
 echo "🔄 Enabling PM2 service..."
-systemctl enable "pm2-$(whoami)"
-systemctl restart "pm2-$(whoami)"
+systemctl --user enable pm2-$(whoami)
+systemctl --user restart pm2-$(whoami)"
 
 echo "✅ Installation complete!"
