@@ -16,6 +16,6 @@
   "ts-node": {
     "esm": true
   },
-  "include": ["src"],
+  "include": ["src", "ecosystem.config.cjs"],
   "exclude": ["node_modules", "dist"]
 }
