@@ -2,14 +2,16 @@ module.exports = {
   apps: [
     {
       name: "splitflap",
-      script: "/opt/splitflap/src/server.ts",
-      interpreter: "/home/splitflap/.npm-global/bin/ts-node",
-      node_args: "--loader ts-node/esm",
+      script: "./src/server.ts",
+      interpreter: "node",
+      args: "-r ts-node/register",
+      cwd: "/opt/splitflap",
       watch: false,
       autorestart: true,
       env: {
         NODE_ENV: "production",
-        NODE_OPTIONS: "--loader ts-node/esm"
+        TS_NODE_TRANSPILE_ONLY: "true",
+        TS_NODE_COMPILER_OPTIONS: '{"module":"NodeNext"}'
       }
     }
   ]
