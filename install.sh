@@ -34,7 +34,7 @@ echo "    sudo apt-get update && sudo apt-get upgrade -y"
 echo "    sudo apt-get install -y curl"
 read -p "Press Enter to continue once these steps are complete..."
 
-# Install Node.js v22.x from NodeSource
+# Install Node.js v22.13.1 from NodeSource
 echo "🔧 Ensuring Node.js 22.x is installed..."
 sudo apt-get remove --purge -y nodejs
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
@@ -65,9 +65,9 @@ npm config set prefix "$HOME/.npm-global"
 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.profile"
 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bash_profile"
-export PATH="$HOME/.npm-global/bin:$PATH"
 
-# Source updated profile settings
+# Apply updated PATH
+export PATH="$HOME/.npm-global/bin:$PATH"
 source "$HOME/.bashrc"
 source "$HOME/.profile"
 
@@ -75,7 +75,7 @@ source "$HOME/.profile"
 echo "📦 Installing PM2..."
 npm install -g pm2
 
-# Ensure PM2 is properly installed and available
+# Ensure PM2 is properly installed
 if ! command -v pm2 &>/dev/null; then
     echo "❌ PM2 installation failed. Exiting."
     exit 1
@@ -97,5 +97,9 @@ pm2 save
 echo "🔄 Enabling PM2 service..."
 systemctl --user enable pm2-$(whoami)
 systemctl --user restart pm2-$(whoami)
+
+# Ensure lingering is enabled so the user service runs on boot
+echo "🔄 Enabling lingering for $(whoami)..."
+sudo loginctl enable-linger "$(whoami)"
 
 echo "✅ Installation complete!"
