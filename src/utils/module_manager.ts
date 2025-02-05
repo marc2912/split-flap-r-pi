@@ -1,5 +1,5 @@
-import { loadConfig, saveConfig } from "./config_handler.ts";
-import { getConnectedMacAddresses } from "./hardware_manager.ts";
+import { loadConfig, saveConfig } from "./config_handler";
+import { getConnectedMacAddresses } from "./hardware_manager";
 
 interface Module {
     "module-mac-address": string;

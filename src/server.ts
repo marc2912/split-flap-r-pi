@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import net from "net";
-import { sendPayloadToModule } from "./utils/tcp_manager.ts";
+import { sendPayloadToModule } from "./utils/tcp_manager";
 
 process.on("uncaughtException", (err) => {
     console.error("🔥 Uncaught Exception:", err);
@@ -29,9 +29,9 @@ interface SendPayloadBody {
 }
 
 // Import routes
-import setupRoutes from "./routes/setup.ts";
-import moduleRoutes from "./routes/modules.ts";
-import layoutRoutes from "./routes/layout.ts";
+import setupRoutes from "./routes/setup";
+import moduleRoutes from "./routes/modules";
+import layoutRoutes from "./routes/layout";
 
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true })); // Handles URL-encoded data

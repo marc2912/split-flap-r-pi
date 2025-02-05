@@ -1,5 +1,5 @@
 import express , { Request, Response } from "express";
-import { fetchNextAvailableModuleForSetup } from "../utils/module_manager.ts";
+import { fetchNextAvailableModuleForSetup } from "../utils/module_manager";
 
 const router = express.Router();
 

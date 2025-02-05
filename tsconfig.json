@@ -1,21 +1,20 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
     "rootDir": "./src",
     "outDir": "./dist",
-    "moduleResolution": "NodeNext",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true,
-    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": false
   },
   "ts-node": {
     "esm": true
   },
-  "include": ["src", "ecosystem.config.cjs"],
+  "include": ["src", "ecosystem.config.js"],
   "exclude": ["node_modules", "dist"]
 }

@@ -1,4 +1,4 @@
-import { loadConfig, saveConfig, updateWiFiConfig } from "../utils/config_handler.js";
+import { loadConfig, saveConfig, updateWiFiConfig } from "../utils/config_handler";
 import express , { Request, Response } from "express";
 
 const router: express.Router = express.Router();
