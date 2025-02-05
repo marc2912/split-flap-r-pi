@@ -63,10 +63,9 @@ npm config set prefix "$HOME/.npm-global"
 
 # Ensure PATH is updated for npm binaries
 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
+echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.profile"
+echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bash_profile"
 export PATH="$HOME/.npm-global/bin:$PATH"
-
-# Ensure PATH is correctly set within the script
-source "$HOME/.bashrc"
 
 # Install PM2 globally
 echo "📦 Installing PM2..."
@@ -80,7 +79,7 @@ fi
 
 # Set up PM2 to start on boot
 echo "🔄 Configuring PM2 for auto-start..."
-pm2 startup systemd -u "$(whoami)" --hp "$HOME"
+pm2 startup systemd -u "$(whoami)" --hp "$HOME" -- -e PATH="$HOME/.npm-global/bin:$PATH"
 
 # Start SplitFlap with PM2
 echo "🚀 Starting SplitFlap with PM2..."
@@ -93,6 +92,6 @@ pm2 save
 # Enable PM2 service (user-level)
 echo "🔄 Enabling PM2 service..."
 systemctl --user enable pm2-$(whoami)
-systemctl --user restart pm2-$(whoami)"
+systemctl --user restart pm2-$(whoami)
 
 echo "✅ Installation complete!"
