@@ -72,6 +72,21 @@ sudo -u splitflap npm install --omit=dev --prefix /opt/splitflap
 echo "🔧 Compiling TypeScript..."
 sudo -u splitflap npm run build --prefix /opt/splitflap
 
-# Start the application in the foreground
-echo "🚀 Starting SplitFlap..."
-exec sudo -u splitflap node /opt/splitflap/dist/server.js
+# Install PM2 globally
+echo "📦 Installing PM2..."
+retry npm install -g pm2
+
+# Ensure PM2 runs as splitflap user
+echo "🔄 Setting up PM2 for splitflap user..."
+sudo -u splitflap pm2 startup systemd -u splitflap --hp /home/splitflap
+
+# Start SplitFlap with PM2
+echo "🚀 Starting SplitFlap with PM2..."
+sudo -u splitflap pm2 start /opt/splitflap/dist/server.js --name splitflap
+
+# Save PM2 process list
+sudo -u splitflap pm2 save
+
+# Enable PM2 service to start on boot
+sudo systemctl enable pm2-splitflap
+sudo systemctl restart pm2-splitflap
