@@ -4,19 +4,20 @@ set -e
 set -o pipefail
 set -u
 
-LOG_FILE="/var/log/splitflap_install.log"
+LOG_FILE="$HOME/splitflap_install.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
 echo "🔄 Starting SplitFlap installation..."
 
-# Ensure script is run as root
-if [ "$(id -u)" -ne 0 ]; then
-    echo "❌ This script must be run as root. Try: sudo ./install.sh"
+# Ensure script is NOT run as root
+if [ "$(id -u)" -eq 0 ]; then
+    echo "❌ Do NOT run this script as root. Run it as a regular user."
     exit 1
 fi
 
-# Get the username of the non-root user running the script
-USERNAME="$(logname)"
+# Get the username of the current user
+USERNAME="$(whoami)"
+APP_DIR="$HOME/splitflap"
 
 # Function to retry commands
 retry() {
@@ -39,57 +40,56 @@ retry() {
 
 # Update system packages
 echo "📦 Updating system packages..."
-retry apt-get update
-retry apt-get upgrade -y
+retry sudo apt-get update
+retry sudo apt-get upgrade -y
 
 # Install dependencies
 echo "📦 Installing required dependencies..."
-retry apt-get install -y curl
+retry sudo apt-get install -y curl
 
 # Install Node.js v22.13.1 from NodeSource
 echo "🔧 Installing Node.js v22.13.1..."
 retry curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-retry apt-get install -y nodejs
+retry sudo apt-get install -y nodejs
 
 # Verify Node.js version
 echo "✅ Node.js version: $(node -v)"
 
-# Ensure /opt/splitflap exists and set correct permissions
-echo "📂 Ensuring correct permissions for /opt/splitflap..."
-mkdir -p /opt/splitflap
-chown -R "$USERNAME":"$USERNAME" /opt/splitflap
-chmod -R 755 /opt/splitflap
+# Ensure splitflap directory exists
+echo "📂 Ensuring correct permissions for $APP_DIR..."
+mkdir -p "$APP_DIR"
+chmod -R 755 "$APP_DIR"
 
-# Move into /opt/splitflap
-cd /opt/splitflap
+# Move into app directory
+cd "$APP_DIR"
 
 # Install Node.js dependencies
 echo "📦 Installing Node.js dependencies..."
-sudo -u "$USERNAME" npm install --omit=dev
+npm install --omit=dev
 
 # Compile TypeScript
 echo "🔧 Compiling TypeScript..."
-sudo -u "$USERNAME" npm run build
+npm run build
 
-# Install PM2 **as the user, NOT root**
+# Install PM2 globally for the user
 echo "📦 Installing PM2..."
-sudo -u "$USERNAME" npm install -g pm2
+npm install -g pm2
 
-# Ensure PM2 starts on boot **for the user**
-echo "🔄 Setting up PM2 for $USERNAME..."
-sudo -u "$USERNAME" pm2 startup systemd --hp "/home/$USERNAME"
+# Ensure PM2 starts on boot
+echo "🔄 Configuring PM2 for auto-start..."
+pm2 startup systemd -u "$USERNAME" --hp "$HOME"
 
 # Start SplitFlap with PM2
-echo "🚀 Starting SplitFlap with PM2 as $USERNAME..."
-sudo -u "$USERNAME" pm2 start /opt/splitflap/dist/server.js --name splitflap
+echo "🚀 Starting SplitFlap with PM2..."
+pm2 start "$APP_DIR/dist/server.js" --name splitflap
 
-# Save PM2 process list **under the correct user**
+# Save PM2 process list to ensure auto-restart on boot
 echo "💾 Saving PM2 process list..."
-sudo -u "$USERNAME" pm2 save
+pm2 save
 
 # Enable PM2 service to start on boot
 echo "🔄 Enabling PM2 service..."
-sudo systemctl enable pm2-"$USERNAME"
-sudo systemctl restart pm2-"$USERNAME"
+systemctl --user enable pm2-"$USERNAME"
+systemctl --user restart pm2-"$USERNAME"
 
 echo "✅ Installation complete!"
