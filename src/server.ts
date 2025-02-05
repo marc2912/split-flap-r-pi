@@ -12,7 +12,7 @@ process.on("unhandledRejection", (reason, promise) => {
     console.error("🔥 Unhandled Promise Rejection:", reason);
     console.error(reason instanceof Error ? reason.stack : reason);
 });
-
+console.log('NODE_PATH:', process.env.NODE_PATH);
 const app = express();
 const PORT: number = Number(process.env.PORT) || 3000;
 const TCP_PORT: number = 4000; // Port for module communication
