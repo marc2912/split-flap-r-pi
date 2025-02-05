@@ -34,7 +34,7 @@ echo "    sudo apt-get update && sudo apt-get upgrade -y"
 echo "    sudo apt-get install -y curl"
 read -p "Press Enter to continue once these steps are complete..."
 
-# Install Node.js v22.13.1 from NodeSource
+# Install Node.js v22.x from NodeSource
 echo "🔧 Ensuring Node.js 22.x is installed..."
 sudo apt-get remove --purge -y nodejs
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
@@ -67,11 +67,15 @@ echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.profile"
 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bash_profile"
 export PATH="$HOME/.npm-global/bin:$PATH"
 
+# Source updated profile settings
+source "$HOME/.bashrc"
+source "$HOME/.profile"
+
 # Install PM2 globally
 echo "📦 Installing PM2..."
 npm install -g pm2
 
-# Ensure PM2 is properly installed
+# Ensure PM2 is properly installed and available
 if ! command -v pm2 &>/dev/null; then
     echo "❌ PM2 installation failed. Exiting."
     exit 1
@@ -79,7 +83,7 @@ fi
 
 # Set up PM2 to start on boot
 echo "🔄 Configuring PM2 for auto-start..."
-pm2 startup systemd -u "$(whoami)" --hp "$HOME" -- -e PATH="$HOME/.npm-global/bin:$PATH"
+eval "$(pm2 startup systemd -u "$(whoami)" --hp "$HOME" | tail -n 1)"
 
 # Start SplitFlap with PM2
 echo "🚀 Starting SplitFlap with PM2..."
