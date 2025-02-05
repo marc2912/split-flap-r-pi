@@ -1,18 +1,13 @@
 module.exports = {
   apps: [
     {
-      name: "splitflap",
-      script: "./src/server.ts",
-      interpreter: "node",
-      args: "-r ts-node/register",
-      cwd: "/opt/splitflap",
-      watch: false,
-      autorestart: true,
+      name: 'splitflap',
+      script: '/opt/splitflap/src/server.ts',
+      interpreter: '/opt/splitflap/node_modules/.bin/ts-node',
       env: {
-        NODE_ENV: "production",
-        TS_NODE_TRANSPILE_ONLY: "true",
-        TS_NODE_COMPILER_OPTIONS: '{"module":"NodeNext"}'
-      }
-    }
-  ]
+        NODE_PATH: '/opt/splitflap/node_modules',
+        // Add other environment variables as needed
+      },
+    },
+  ],
 };
