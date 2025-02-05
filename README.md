@@ -22,11 +22,9 @@ To install and run the project, use the following commands:
    **sudo apt-get install git**
 6. Clone the repository
    **sudo git clone https://github.com/marc2912/split-flap-r-pi.git /opt/splitflap**
-7. Navigate into the project directory:
-   **cd /opt/split-flap-r-pi**
-8. Change script to be executable
+7. Change script to be executable
    **sudo chmod +x /opt/splitflap/install.sh**
-9. Run the install script
+8. Run the install script
    **sudo /opt/splitflap/install.sh**
 
 

@@ -51,42 +51,40 @@ retry apt-get install -y nodejs
 # Verify Node.js version
 echo "✅ Node.js version: $(node -v)"
 
-# Create splitflap user if it doesn’t exist
-if ! id "splitflap" &>/dev/null; then
-    echo "➕ Creating 'splitflap' system user..."
-    useradd -m -r -s /bin/bash splitflap
-else
-    echo "⚠️ User 'splitflap' already exists."
-fi
-
-# Move the splitflap project to /opt/
-echo "📂 updating permissions for /opt/splitflap..."
-chown -R splitflap:splitflap /opt/splitflap
+# Ensure /opt/splitflap exists and set correct permissions
+echo "📂 Ensuring correct permissions for /opt/splitflap..."
+mkdir -p /opt/splitflap
+chown -R "$(whoami)":"$(whoami)" /opt/splitflap
 chmod -R 755 /opt/splitflap
+
+# Move into /opt/splitflap
+cd /opt/splitflap
 
 # Install Node.js dependencies
 echo "📦 Installing Node.js dependencies..."
-sudo -u splitflap npm install --omit=dev --prefix /opt/splitflap
+npm install --omit=dev
 
 # Compile TypeScript
 echo "🔧 Compiling TypeScript..."
-sudo -u splitflap npm run build --prefix /opt/splitflap
+npm run build
 
 # Install PM2 globally
 echo "📦 Installing PM2..."
 retry npm install -g pm2
 
-# Ensure PM2 runs as splitflap user
-echo "🔄 Setting up PM2 for splitflap user..."
-sudo -u splitflap pm2 startup systemd -u splitflap --hp /home/splitflap
+# Ensure PM2 starts on boot
+echo "🔄 Setting up PM2..."
+pm2 startup systemd -u "$(whoami)" --hp "$HOME"
 
 # Start SplitFlap with PM2
 echo "🚀 Starting SplitFlap with PM2..."
-sudo -u splitflap pm2 start /opt/splitflap/dist/server.js --name splitflap
+pm2 start /opt/splitflap/dist/server.js --name splitflap
 
 # Save PM2 process list
-sudo -u splitflap pm2 save
+pm2 save
 
 # Enable PM2 service to start on boot
-sudo systemctl enable pm2-splitflap
-sudo systemctl restart pm2-splitflap
+sudo systemctl enable pm2-"$(whoami)"
+sudo systemctl restart pm2-"$(whoami)"
+
+echo "✅ Installation complete!"
