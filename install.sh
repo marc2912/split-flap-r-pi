@@ -74,11 +74,11 @@ retry npm install -g pm2
 
 # Ensure PM2 starts on boot
 echo "🔄 Setting up PM2..."
-pm2 startup systemd -u "$(whoami)" --hp "$HOME"
+pm2 startup systemd
 
 # Start SplitFlap with PM2
-echo "🚀 Starting SplitFlap with PM2..."
-pm2 start /opt/splitflap/dist/server.js --name splitflap
+echo "🚀 Starting SplitFlap with PM2 as $(logname)..."
+sudo -u "$(logname)" pm2 start /opt/splitflap/dist/server.js --name splitflap
 
 # Save PM2 process list
 pm2 save
