@@ -59,8 +59,8 @@ else
     echo "⚠️ User 'splitflap' already exists."
 fi
 
-# Set ownership and permissions for /opt/splitflap
-echo "🔧 Setting permissions for /opt/splitflap..."
+# Move the splitflap project to /opt/
+echo "📂 updating permissions for /opt/splitflap..."
 chown -R splitflap:splitflap /opt/splitflap
 chmod -R 755 /opt/splitflap
 
