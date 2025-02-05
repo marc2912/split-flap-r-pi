@@ -84,11 +84,12 @@ sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -
 echo "🚀 Starting SplitFlap with PM2 as $(logname)..."
 sudo -u "$(logname)" pm2 start /opt/splitflap/dist/server.js --name splitflap
 
-# Save PM2 process list
+# Save PM2 process list to ensure auto-restart on boot
+echo "💾 Saving PM2 process list..."
 pm2 save
 
-# Enable PM2 service to start on boot
-sudo systemctl enable pm2-"$(whoami)"
+# Restart PM2 service to apply changes
+echo "🔄 Restarting PM2 service..."
 sudo systemctl restart pm2-"$(whoami)"
 
 echo "✅ Installation complete!"
