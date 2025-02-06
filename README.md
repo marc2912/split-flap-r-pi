@@ -14,7 +14,7 @@ A Raspberry Pi-based controller for a modular split flap display.
 To install and run the project, use the following commands:
 
 1. Install Raspberry Pi OS Lite via Raspberry Pi Imager
-2. Create a user account and enable SSH
+2. Create a user account and enable SSH, use public key authentication.
 3. Connect Raspberry Pi to Ethernet and power on.
 4. SSH into the Pi
    **ssh pi@<RPI_IP_ADDRESS>**
@@ -26,6 +26,8 @@ To install and run the project, use the following commands:
    **chmod +x split-flap-r-pi/install.sh**
 8. Run the install script
    **split-flap-r-pi/install.sh**
+
+This will install both the application and setup AP mode on the Pi.
 
 
 ---

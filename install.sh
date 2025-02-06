@@ -7,7 +7,7 @@ set -u
 LOG_FILE="$HOME/split-flap-r-pi/splitflap_install.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
-# 🔥 Prevent running as root
+# Prevent running as root
 if [ "$(id -u)" -eq 0 ]; then
     echo "❌ This script should NOT be run as root! Run it as your normal user."
     exit 1
@@ -34,64 +34,54 @@ retry() {
     done
 }
 
-# 🔥 Step 1: Prompt user to manually update the system
-echo "⚠️  Please run the following commands manually before proceeding:"
-echo "    sudo apt-get update && sudo apt-get upgrade -y"
-echo "    sudo apt-get install -y curl"
-read -p "Press Enter to continue once these steps are complete..."
+# update the system
+echo "🔧 Running updates first, this might take a while..."
+read -p "Press Enter to continue."
+retry sudo bash -c "apt-get update && apt-get upgrade -y"
+retry sudo apt-get install -y curl
 
-# 🔥 Step 2: Install Node.js 22.x
+# install Node.js 22.x
 echo "🔧 Installing Node.js v22.x..."
 retry sudo apt-get remove --purge -y nodejs
 retry curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
 retry sudo apt-get install -y nodejs
 
-# 🔥 Step 3: Verify Node.js version
-echo "✅ Node.js version: $(node -v)"
+# verify Node.js version
+echo "Node.js version: $(node -v)"
 
-# 🔥 Step 4: Set correct permissions for the project folder
+# set correct permissions for the project folder
 chmod -R 755 "$HOME/split-flap-r-pi"
 
-# 🔥 Step 5: Move into the SplitFlap project directory
+# move into the SplitFlap project directory
 cd "$HOME/split-flap-r-pi"
 
-# 🔥 Step 6: Install Node.js dependencies
-echo "📦 Installing Node.js dependencies..."
+# Install Node.js dependencies
+echo "Installing Node.js dependencies..."
 npm install --omit=dev
 
-# 🔥 Step 7: Compile TypeScript
-echo "🔧 Compiling TypeScript..."
+# Compile TypeScript
+echo "Compiling TypeScript..."
 npm run build
 
-# 🔥 Step 8: Configure npm global directory
-echo "🔧 Configuring npm global directory..."
+# Configure npm global directory
+echo "configuring npm global directory..."
 mkdir -p "$HOME/.npm-global"
 npm config set prefix "$HOME/.npm-global"
 
-# 🔥 Step 9: Ensure PATH is updated for npm binaries
+# make sure PATH is updated for npm binaries, required because of the way the npm global directory is configured
 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bashrc"
 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.profile"
 echo 'export PATH="$HOME/.npm-global/bin:$PATH"' >> "$HOME/.bash_profile"
 export PATH="$HOME/.npm-global/bin:$PATH"
 
-# 🔥 Step 10: Install PM2 globally (user-level)
-echo "📦 Installing PM2..."
-npm install -g pm2
-
-# 🔥 Step 11: Ensure PM2 is properly installed
-if ! command -v pm2 &>/dev/null; then
-    echo "❌ PM2 installation failed. Exiting."
-    exit 1
-fi
-
-# 🔥 Step 12: Enable `linger` to allow user services after reboot
-echo "🔄 Enabling user services to persist after logout..."
+#  Enable `linger` to allow user services after reboot
+echo "Enabling user services to persist after logout..."
 loginctl enable-linger "$(whoami)"
 
-# 🔥 Step 13: Create a systemd service file
+# create a systemd service file
 SERVICE_PATH="$HOME/.config/systemd/user/splitflap.service"
 
-echo "🔧 Creating systemd service..."
+echo "Creating systemd service..."
 mkdir -p "$HOME/.config/systemd/user"
 
 cat <<EOF > "$SERVICE_PATH"
@@ -102,7 +92,7 @@ After=network.target
 [Service]
 Type=simple
 WorkingDirectory=$HOME/split-flap-r-pi
-ExecStart=$(which node) $HOME/split-flap-r-pi/dist/server.js
+ExecStart=/usr/bin/env node $HOME/split-flap-r-pi/dist/server.js
 Restart=always
 Environment=PATH=$HOME/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 Environment=NODE_ENV=production
@@ -111,8 +101,8 @@ Environment=NODE_ENV=production
 WantedBy=default.target
 EOF
 
-# 🔥 Step 14: Reload systemd and enable service
-echo "🔄 Enabling SplitFlap service..."
+# Reload systemd and enable service
+echo "Enabling SplitFlap service..."
 systemctl --user daemon-reload
 systemctl --user enable splitflap.service
 systemctl --user restart splitflap.service
@@ -121,3 +111,17 @@ echo "✅ Installation complete!"
 echo "👉 To check logs: journalctl --user -xeu splitflap.service --no-pager | tail -50"
 echo "👉 To restart manually: systemctl --user restart splitflap.service"
 echo "👉 To stop manually: systemctl --user stop splitflap.service"
+
+# Start the access point configuration script
+echo "The application is now installed and running as a service."
+echo "Next we need to setup the Pi as an access point, this script will be launched"
+echo "by executing the following script: ./ap_config.sh"
+read -p "Press enter to start the access point configuration script"
+
+if [ -f "./ap_config.sh" ]; then
+    chmod +x ./ap_config.sh
+    ./ap_config.sh
+else
+    echo "ERROR: Access Point setup script (ap_config.sh) not found."
+    echo "This script is required to configure the access point."
+fi
