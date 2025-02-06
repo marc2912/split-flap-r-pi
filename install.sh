@@ -123,6 +123,9 @@ systemctl --user daemon-reload
 systemctl --user enable splitflap.service
 systemctl --user restart splitflap.service
 
+# Setting update script to executable
+chmod +x "$HOME/split-flap-r-pi/update.sh"
+
 echo -e "${BLUE_CUSTOM}✅ Installation complete!${NC}"
 echo -e "${BLUE_CUSTOM}👉 To check logs: journalctl --user -xeu splitflap.service --no-pager | tail -50${NC}"
 echo -e "${BLUE_CUSTOM}👉 To restart manually: systemctl --user restart splitflap.service${NC}"
