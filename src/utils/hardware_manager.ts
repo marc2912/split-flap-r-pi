@@ -1,12 +1,19 @@
 import { exec } from "child_process";
 
+const IEEE_OUI_URL = "https://standards-oui.ieee.org/oui.txt";
+
+// Cache variables
+let cachedEsp32Prefixes: string[] = [];
+let cacheTimestamp: number = 0;
+const CACHE_DURATION_MS = 24 * 60 * 60 * 1000; // 24 hours
+
 /**
  * Fetches the MAC addresses of connected ESP32 modules via wlan0.
  * Uses `arp -a` and filters by known ESP32 MAC prefixes.
  */
 export const getConnectedMacAddresses = async (): Promise<string[]> => {
-    return new Promise((resolve, reject) => {
-        exec("arp -a | grep wlan0", (error, stdout, stderr) => {
+    return new Promise(async (resolve, reject) => {
+        exec("arp -a | grep wlan0", async (error, stdout, stderr) => {
             if (error) {
                 console.error("Error fetching MAC addresses:", stderr);
                 return reject(error);
@@ -16,18 +23,52 @@ export const getConnectedMacAddresses = async (): Promise<string[]> => {
             const macRegex = /(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}/g;
             const macAddresses = stdout.match(macRegex) || [];
 
-            // Known ESP32 OUI prefixes
-            const esp32Prefixes = ["24:6F:28", "3C:71:BF", "7C:DF:A1", "AC:67:B2", "BC:DD:C2"];
-            
+            // Get ESP32 MAC prefixes (cached or fetched)
+            const esp32Prefixes = await getEsp32MacPrefixes();
+
             // Filter only ESP32 devices
             const esp32Macs = macAddresses.filter(mac =>
-                esp32Prefixes.some(prefix => mac.toUpperCase().startsWith(prefix))
+                esp32Prefixes.some(prefix => mac.startsWith(prefix))
             );
 
             console.log(`Detected ESP32 MACs: ${esp32Macs.join(", ")}`);
             resolve(esp32Macs);
         });
     });
+};
+
+/**
+ * Fetches the latest ESP32 MAC prefixes from IEEE OUI list, with caching.
+ */
+const getEsp32MacPrefixes = async (): Promise<string[]> => {
+    const now = Date.now();
+
+    // Use cached values if still valid
+    if (cachedEsp32Prefixes.length > 0 && now - cacheTimestamp < CACHE_DURATION_MS) {
+        console.log("Using cached ESP32 prefixes.");
+        return cachedEsp32Prefixes;
+    }
+
+    console.log("Fetching new ESP32 MAC prefixes...");
+    try {
+        const response = await fetch(IEEE_OUI_URL);
+        const text: string = await response.text();
+        const lines: string[] = text.split("\n");
+
+        // Extract all Espressif prefixes
+        const esp32Prefixes = lines
+            .filter((line: string) => line.toLowerCase().includes("espressif"))
+            .map((line: string) => line.substring(0, 8).trim().replace(/-/g, ":").toUpperCase());
+
+        // Update cache
+        cachedEsp32Prefixes = esp32Prefixes;
+        cacheTimestamp = now;
+
+        return esp32Prefixes;
+    } catch (error) {
+        console.error("Failed to fetch OUI list:", error);
+        return [];
+    }
 };
 
 /**

@@ -108,12 +108,12 @@ sudo chmod 600 "$CONFIG_PATH"
 
 # Restart NetworkManager
 echo -e "${BLUE_CUSTOM}Restarting NetworkManager...${NC}"
-sudo systemctl restart NetworkManager
+retry sudo systemctl restart NetworkManager
 
 # Verify AP Setup
 # Verify that the AP is active
 echo "📡 Checking if SplitFlap AP is running..."
 sleep 5
-nmcli connection show --active | grep SplitFlap
+retry nmcli connection show --active | grep SplitFlap
 
 echo -e "${BLUE_CUSTOM}Access Point Setup Complete!${NC}"
