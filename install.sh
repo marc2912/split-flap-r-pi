@@ -133,6 +133,7 @@ echo -e "${BLUE_CUSTOM}👉 To stop manually: systemctl --user stop splitflap.se
 
 # Start the access point configuration script
 echo -e "${BLUE_CUSTOM}The application is now installed and running as a service.${NC}"
+
 echo -e "${BLUE_CUSTOM}Next we need to setup the Pi as an access point, this script will be launched${NC}"
 echo -e "${BLUE_CUSTOM}by executing the following script: ./ap_config.sh${NC}"
 echo -e "${BLUE_CUSTOM}Press enter to start the access point configuration script${NC}"
@@ -144,4 +145,17 @@ if [ -f "./ap_config.sh" ]; then
 else
     echo -e "${BLUE_CUSTOM}ERROR: Access Point setup script 'ap_config.sh' not found.${NC}"
     echo -e "${BLUE_CUSTOM}This script is required to configure the access point.${NC}"
+fi
+
+echo -e "${BLUE_CUSTOM}Next we need to setup broadcasting so the mobile app will be able to find the pi${NC}"
+echo -e "${BLUE_CUSTOM}once connected to the wifi.  This will be setup by executing ./broadcast.sh${NC}"
+echo -e "${BLUE_CUSTOM}Press enter to start the configuration script${NC}"
+read -p ">"
+
+if [ -f "./broadcast.sh" ]; then
+    chmod +x ./broadcast.sh
+    ./broadcast.sh
+else
+    echo -e "${BLUE_CUSTOM}ERROR: Broadcast setup script 'broadcast.sh' not found.${NC}"
+    echo -e "${BLUE_CUSTOM}This script is required to configure wlan1 broadcast.${NC}"
 fi

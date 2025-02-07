@@ -14,6 +14,9 @@ else
     BLUE_CUSTOM=''  
 fi
 
+LOG_FILE="$HOME/split-flap-r-pi/splitflap_update.log"
+exec > >(tee -a "$LOG_FILE") 2>&1
+
 REPO_DIR="$HOME/split-flap-r-pi"
 FORCE_UPDATE=false
 
