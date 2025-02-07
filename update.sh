@@ -62,18 +62,24 @@ fi
 if git diff --name-only HEAD@{1} HEAD | grep -q "package-lock.json\|package.json"; then
     echo -e "${BLUE_CUSTOM}Dependencies changed, reinstalling...${NC}"
     npm ci
+else 
+    echo -e "${BLUE_CUSTOM}Dependencies unchanged.${NC}"
 fi
-
+ 
 # Rebuild the project only if necessary or forced
 if [[ "$FORCE_UPDATE" == "true" ]] || git diff --name-only HEAD@{1} HEAD | grep -q "src/\|dist/"; then
     echo -e "${BLUE_CUSTOM}Rebuilding project...${NC}"
     npm run build
+else
+    echo -e "${BLUE_CUSTOM}No changes in source files. Skipping build.${NC}"
 fi
 
 # Restart the service if code changed or forced
 if [[ "$FORCE_UPDATE" == "true" ]] || git diff --name-only HEAD@{1} HEAD | grep -q "dist/"; then
     echo -e "${BLUE_CUSTOM}Restarting SplitFlap service...${NC}"
     systemctl --user restart splitflap.service
+else
+    echo -e "${BLUE_CUSTOM}No changes in compiled files. Skipping service restart.${NC}"
 fi
 
 echo -e "${BLUE_CUSTOM}✅ Update complete!${NC}"
