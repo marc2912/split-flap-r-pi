@@ -59,7 +59,7 @@ if git diff --name-only HEAD@{1} HEAD | grep -q "update.sh"; then
 fi
 
 # Check if dependencies changed
-if git diff --name-only HEAD@{1} HEAD | grep -q "package-lock.json\|package.json"; then
+if [[ "$FORCE_UPDATE" == "true" ]] || git diff --name-only HEAD@{1} HEAD | grep -q "package-lock.json\|package.json"; then
     echo -e "${BLUE_CUSTOM}Dependencies changed, reinstalling...${NC}"
     npm ci
 else 
