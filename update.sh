@@ -81,5 +81,5 @@ if [[ "$FORCE_UPDATE" == "true" ]] || git diff --name-only HEAD@{1} HEAD | grep 
 else
     echo -e "${BLUE_CUSTOM}No changes in compiled files. Skipping service restart.${NC}"
 fi
-
+chmom +x update.sh
 echo -e "${BLUE_CUSTOM}✅ Update complete!${NC}"
