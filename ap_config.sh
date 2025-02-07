@@ -113,6 +113,7 @@ sudo systemctl restart NetworkManager
 # Verify AP Setup
 # Verify that the AP is active
 echo "📡 Checking if SplitFlap AP is running..."
+sleep 5
 nmcli connection show --active | grep SplitFlap
 
 echo -e "${BLUE_CUSTOM}Access Point Setup Complete!${NC}"
