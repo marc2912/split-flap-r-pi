@@ -6,7 +6,7 @@ set -u
 
 # Reset color
 NC='\033[0m'  
-if [[ "$COLORTERM" == "truecolor" || "$COLORTERM" == "24bit" ]]; then
+if [[ "${COLORTERM:-}" == "truecolor" || "${COLORTERM:-}" == "24bit" ]]; then
     BLUE_CUSTOM='\033[38;2;47;98;155m'  
 elif [[ "$TERM" =~ "256color" ]]; then
     BLUE_CUSTOM='\033[38;5;61m'  
