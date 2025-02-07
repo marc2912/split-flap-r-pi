@@ -12,6 +12,7 @@ router.get("/total", async (req: Request, res: Response) => {
 
         res.json({
             totalModules,
+            temp: 3,
             esp32Modules: esp32Macs.length,
             esp32MacAddresses: esp32Macs
         });
