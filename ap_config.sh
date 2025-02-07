@@ -84,8 +84,3 @@ sudo systemctl restart NetworkManager
 
 # Verify AP Setup
 echo -e "${BLUE_CUSTOM}Access Point Setup Complete!${NC}"
-echo -e "${BLUE_CUSTOM}Press enter to reboot the system and apply changes.${NC}"
-read -p ">"
-echo -e "${BLUE_CUSTOM}🔄 Rebooting to apply changes...${NC}"
-sleep 2
-sudo reboot

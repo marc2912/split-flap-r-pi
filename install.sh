@@ -159,3 +159,9 @@ else
     echo -e "${BLUE_CUSTOM}ERROR: Broadcast setup script 'broadcast.sh' not found.${NC}"
     echo -e "${BLUE_CUSTOM}This script is required to configure wlan1 broadcast.${NC}"
 fi
+
+echo -e "${BLUE_CUSTOM}Press enter to reboot the system and apply changes.${NC}"
+read -p ">"
+echo -e "${BLUE_CUSTOM}🔄 Rebooting to apply changes...${NC}"
+sleep 2
+sudo reboot
