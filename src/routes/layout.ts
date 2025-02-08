@@ -4,7 +4,7 @@ const router = express.Router();
 const {logger} = require("../utils/logger");
 
 // Endpoint to save the split flap layout
-router.post("/", (req : Request, res : Response) => {
+router.post("/save", (req : Request, res : Response) => {
     const { layout } = req.body;
     if (!layout || !Array.isArray(layout)) {
         return res.status(400).json({ error: "Valid layout array is required." });

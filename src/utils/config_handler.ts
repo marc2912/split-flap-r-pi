@@ -9,9 +9,7 @@ const {logger} = require("./logger");
 
 const CONFIG_FILE = path.join(__dirname, process.env.CONFIG_FILE || "../splitflap-config.json");
 const LOCK_FILE = path.join(__dirname, "../splitflap-config.lock");
-const WPA_SUPPLICANT_FILE = process.env.WPA_SUPPLICANT_FILE || "/etc/wpa_supplicant/wpa_supplicant.conf";
 
-// ✅ Proper TypeScript Typing
 interface Config {
     modules: { "module-mac-address": string }[];
     layout: { row: number; column: number; moduleId: string }[];
@@ -27,14 +25,14 @@ const fileExists = (filePath: string): boolean => {
     }
 };
 
-// ✅ Load configuration from file with file locking
+// Load configuration from file with file locking
 export const loadConfig = (): Config => {
     let retries = 120; // Maximum retries (120 * 100ms = 12 seconds)
 
     while (fileExists(LOCK_FILE) && retries > 0) {
         retries--;
         logger.info("Waiting for lock file to be released... "+ (120 - retries) + "s / 120s");
-        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100); // ✅ Non-blocking sleep alternative
+        Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100); 
 
         if (retries === 0) {
             logger.error("Failed to acquire lock file. Exiting.");
@@ -49,7 +47,7 @@ export const loadConfig = (): Config => {
     return { modules: [], layout: [], pairingKey: "" };
 };
 
-// ✅ Save configuration to file with file locking
+// Save configuration to file with file locking
 export const saveConfig = (config: Config): void => {
     try {
         fs.writeFileSync(LOCK_FILE, "lock");
@@ -61,45 +59,21 @@ export const saveConfig = (config: Config): void => {
     }
 };
 
-// ✅ Update Raspberry Pi's Wi-Fi configuration
-export const updateWiFiConfig = (ssid: string, password: string): void => {
-    const wifiConfig = `
-country=US
-ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-update_config=1
-
-network={
-    ssid="${ssid}"
-    psk="${password}"
-    key_mgmt=WPA-PSK
-}
-`;
-    fs.writeFileSync("/tmp/wpa_supplicant.conf", wifiConfig);
-    logger.info("Wi-Fi configuration updated in /tmp.");
-
-    // ✅ Backup existing config before overwriting
-    exec(`sudo cp ${WPA_SUPPLICANT_FILE} /etc/wpa_supplicant/wpa_supplicant.conf.bak`, (backupError) => {
-        if (backupError) {
-            logger.error("Error backing up existing Wi-Fi config:", backupError);
-        } else {
-            logger.info("Existing Wi-Fi config backed up.");
+// Update Raspberry Pi's Wi-Fi configuration
+export const updateWiFiConfig = (ssid: string, password: string): boolean => {
+    const command = `nmcli dev wifi connect "${ssid}" password "${password}" ifname wlan1`;
+    exec(command, (error, stdout, stderr) => {
+        if (error) {
+        console.error("Error connecting to wifi:", stderr);
+        return false;
         }
-
-        // ✅ Overwrite with new config and reload Wi-Fi
-        exec(`sudo cp /tmp/wpa_supplicant.conf ${WPA_SUPPLICANT_FILE} && sudo wpa_cli -i wlan0 reconfigure`, (error, stdout, stderr) => {
-            if (error) {
-                logger.error("Error restarting Wi-Fi: ", stderr);
-                logger.info("Restoring previous Wi-Fi configuration...");
-                exec(`sudo cp /etc/wpa_supplicant/wpa_supplicant.conf.bak ${WPA_SUPPLICANT_FILE} && sudo wpa_cli -i wlan0 reconfigure`, (restoreError) => {
-                    if (restoreError) {
-                        logger.error("Failed to restore Wi-Fi settings! Manual intervention needed.");
-                    } else {
-                        logger.info("Previous Wi-Fi settings restored.");
-                    }
-                });
-            } else {
-                logger.info("Wi-Fi restarted successfully with new settings.");
-            }
-        });
+        console.log("Connected successfully:", stdout);
+        return true;
     });
+    return false;
+};
+
+// Checks to see if the Raspberry Pi is connected to a Wi-Fi network
+export const checkWifiConnection = (): boolean => {
+    return false;
 };

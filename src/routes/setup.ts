@@ -1,12 +1,13 @@
 import { loadConfig, saveConfig, updateWiFiConfig } from "../utils/config_handler";
 import express , { Request, Response } from "express";
 
+
 const {logger} = require("../utils/logger");
 const router: express.Router = express.Router();
 
 let config = loadConfig();
 
-// ✅ Correct Function Signature
+// Endpoint to set the Wi-Fi SSID and password from app.
 router.post("/ssid", (req: Request, res: Response) => {
     if (config.pairingKey) {
         return res.status(403).json({ error: "SSID configuration is locked after pairing." });
@@ -18,9 +19,18 @@ router.post("/ssid", (req: Request, res: Response) => {
     }
 
     // Update Wi-Fi settings and restart networking
-    updateWiFiConfig(ssid, password);
+    if (updateWiFiConfig(ssid, password)) {
+        return res.json({ message: "Wi-Fi SSID and password set successfully. Pi is connected." });
+    } else {
+        return res.status(500).json({ message: "Failed to connect to your home network." });
+    }
 
-    res.json({ message: "Wi-Fi SSID and password set successfully. Pi will attempt to connect." });
+    // // Check the pi's Wi-Fi connection status
+    // if (checkWifiConnection()) {
+    //     return res.json({ message: "Wi-Fi SSID and password set successfully. Pi is connected." });
+    // } else {
+    //     return res.status(500).json({ message: "Failed to connect to your home network." });
+    // }
 });
 
 
