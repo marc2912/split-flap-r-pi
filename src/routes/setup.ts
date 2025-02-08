@@ -21,7 +21,10 @@ router.post("/ssid", async (req: Request, res: Response) => {
     try {
         const success = await updateWiFiConfig(ssid, password);
         if (success) {
-            return res.json({ message: "Wi-Fi SSID and password set successfully. Pi is connected." });
+            const pairingKey = Math.random().toString(36).substring(2, 10);
+            config.pairingKey = pairingKey;
+            saveConfig(config);
+            return res.json({ pairingKey });
         } else {
             return res.status(500).json({ message: "Failed to connect to your home network." });
         }
@@ -29,14 +32,6 @@ router.post("/ssid", async (req: Request, res: Response) => {
         logger.error("Wi-Fi configuration error:", error);
         return res.status(500).json({ error: "Internal server error while updating Wi-Fi." });
     }
-});
-
-// Endpoint to generate a pairing key
-router.post("/pairing", (req: Request, res: Response) => {
-    const pairingKey = Math.random().toString(36).substring(2, 10);
-    config.pairingKey = pairingKey;
-    saveConfig(config);
-    res.json({ pairingKey });
 });
 
 export default router;

@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 import net from "net";
 import { sendPayloadToModule } from "./utils/tcp_manager";
+import { validateAdminToken, validatePairingToken } from "./middlewares/authMiddleware"; 
 const { logger } = require("./utils/logger");
 
 
@@ -39,9 +40,9 @@ app.use(express.urlencoded({ extended: true })); // Handles URL-encoded data
 
 // Use routes
 app.use("/setup", setupRoutes);
-app.use("/modules", moduleRoutes);
-app.use("/layout", layoutRoutes);
-app.use("/admin", adminRoutes);
+app.use("/modules", validatePairingToken, moduleRoutes);
+app.use("/layout",validatePairingToken, layoutRoutes);
+app.use("/admin", validateAdminToken, adminRoutes);
 
 // Endpoint to send a payload to a module
 app.post("/tcp/send", async (req: Request, res: Response): Promise<void> => {
