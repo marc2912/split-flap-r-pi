@@ -12,8 +12,7 @@ router.get("/total", async (req: Request, res: Response) => {
         const esp32Macs = await getConnectedMacAddresses();
 
         res.json({
-            totalModules,
-            temp: 3,
+            totalConnectedDevices: totalModules,
             esp32Modules: esp32Macs.length,
             esp32MacAddresses: esp32Macs
         });
