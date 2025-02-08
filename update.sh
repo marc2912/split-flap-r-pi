@@ -79,7 +79,7 @@ else
 fi
 
 # Restart the service if code changed or forced
-if [[ "$FORCE_UPDATE" == "true" ]] || CHANGED; then
+if [[ "$FORCE_UPDATE" == "true" ]] || [[ "$CHANGED" == "true" ]]  ; then
     echo -e "${BLUE_CUSTOM}Restarting SplitFlap service...${NC}"
     systemctl --user restart splitflap.service
 else
