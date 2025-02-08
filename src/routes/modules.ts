@@ -2,6 +2,7 @@ import express , { Request, Response } from "express";
 import { fetchNextAvailableModuleForSetup } from "../utils/module_manager";
 import { getConnectedMacAddresses, getConnectedModuleCounts } from "../utils/hardware_manager";
 
+const { logger } = require("../utils/logger");
 const router = express.Router();
 
 // Endpoint to get the total number of connected modules
@@ -17,7 +18,7 @@ router.get("/total", async (req: Request, res: Response) => {
             esp32MacAddresses: esp32Macs
         });
     } catch (error) {
-        console.error("Error in /total endpoint:", error);
+        logger.error("Error in /total endpoint:", error);
         res.status(500).json({ error: "Failed to retrieve module information." });
     }
 });

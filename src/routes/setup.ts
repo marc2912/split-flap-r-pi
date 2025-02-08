@@ -1,6 +1,7 @@
 import { loadConfig, saveConfig, updateWiFiConfig } from "../utils/config_handler";
 import express , { Request, Response } from "express";
 
+const {logger} = require("../utils/logger");
 const router: express.Router = express.Router();
 
 let config = loadConfig();

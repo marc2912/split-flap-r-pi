@@ -1,5 +1,7 @@
 import { exec } from "child_process";
 
+const {logger} = require("./logger");
+
 const IEEE_OUI_URL = "https://standards-oui.ieee.org/oui.txt";
 
 // Cache variables
@@ -15,14 +17,14 @@ export const getConnectedMacAddresses = async (): Promise<string[]> => {
     return new Promise(async (resolve, reject) => {
         exec("arp -a | grep wlan0", async (error, stdout, stderr) => {
             if (error) {
-                console.error("Error fetching MAC addresses:", stderr);
+                logger.error("Error fetching MAC addresses:", stderr);
                 return reject(error);
             }
 
             // Extract MAC addresses using regex
             const macRegex = /(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}/g;
             const macAddresses = stdout.match(macRegex) || [];
-            console.log(`Detected MACs: ${macAddresses.join(", ")}`);
+            logger.info(`Detected MACs: ${macAddresses.join(", ")}`);
             // Get ESP32 MAC prefixes (cached or fetched)
             const esp32Prefixes = await getEsp32MacPrefixes();
 
@@ -31,7 +33,7 @@ export const getConnectedMacAddresses = async (): Promise<string[]> => {
                 esp32Prefixes.some(prefix => mac.startsWith(prefix))
             );
 
-            console.log(`Detected ESP32 MACs: ${esp32Macs.join(", ")}`);
+            logger.info(`Detected ESP32 MACs: ${esp32Macs.join(", ")}`);
             resolve(esp32Macs);
         });
     });
@@ -45,11 +47,11 @@ export const getEsp32MacPrefixes = async (): Promise<string[]> => {
 
     // Use cached values if still valid
     if (cachedEsp32Prefixes.length > 0 && now - cacheTimestamp < CACHE_DURATION_MS) {
-        console.log("Using cached ESP32 prefixes.");
+        logger.info("Using cached ESP32 prefixes.");
         return cachedEsp32Prefixes;
     }
 
-    console.log("Fetching new ESP32 MAC prefixes...");
+    logger.info("Fetching new ESP32 MAC prefixes...");
     try {
         const response = await fetch(IEEE_OUI_URL);
         const text: string = await response.text();
@@ -66,7 +68,7 @@ export const getEsp32MacPrefixes = async (): Promise<string[]> => {
 
         return esp32Prefixes;
     } catch (error) {
-        console.error("Failed to fetch OUI list:", error);
+        logger.error("Failed to fetch OUI list:", error);
         return [];
     }
 };
@@ -79,12 +81,12 @@ export const getConnectedModuleCounts = async (): Promise<number> => {
     return new Promise((resolve, reject) => {
         exec("iw dev wlan0 station dump | grep 'Station' | wc -l", (error, stdout, stderr) => {
             if (error) {
-                console.error("Error fetching module count:", stderr);
+                logger.error("Error fetching module count:", stderr);
                 return reject(error);
             }
 
             const count = parseInt(stdout.trim(), 10) || 0;
-            console.log(`Total connected modules: ${count}`);
+            logger.info(`Total connected modules: ${count}`);
             resolve(count);
         });
     });

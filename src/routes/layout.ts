@@ -1,6 +1,7 @@
 import express, { Request, Response } from "express";
 
 const router = express.Router();
+const {logger} = require("../utils/logger");
 
 // Endpoint to save the split flap layout
 router.post("/", (req : Request, res : Response) => {

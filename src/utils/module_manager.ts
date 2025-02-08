@@ -1,6 +1,8 @@
 import { loadConfig, saveConfig } from "./config_handler";
 import { getConnectedMacAddresses } from "./hardware_manager";
 
+const {logger} = require("./logger");
+
 interface Module {
     "module-mac-address": string;
 }
