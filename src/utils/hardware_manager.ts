@@ -20,7 +20,7 @@ export const getConnectedMacAddresses = async (): Promise<string[]> => {
                 logger.error("Error fetching MAC addresses:", stderr);
                 return reject(error);
             }
-            var retValue = stdout;
+            var retValue = stdout.toUpperCase();
             // Extract MAC addresses using regex
             const macRegex = /(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}/g;
             const macAddresses = retValue.match(macRegex) || [];
