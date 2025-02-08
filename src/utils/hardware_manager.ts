@@ -24,7 +24,7 @@ export const getConnectedMacAddresses = async (): Promise<string[]> => {
             // Extract MAC addresses using regex
             const macRegex = /(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}/g;
             const macAddresses = stdout.match(macRegex) || [];
-            logger.info(`Detected MACs: ${macAddresses.join(", ")}`);
+            logger.info(`Detected MACs: ${stdout}`);
             // Get ESP32 MAC prefixes (cached or fetched)
             const esp32Prefixes = await getEsp32MacPrefixes();
 
