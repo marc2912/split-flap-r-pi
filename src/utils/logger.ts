@@ -1,6 +1,10 @@
 
 import type { Logform } from "winston";
+const os = require("os");
+const path = require("path");
+
 const winston = require("winston");
+const logFilePath = path.join(os.homedir(), "logs/split-flap.log");
 
 const logger = winston.createLogger({
     level: "info",
@@ -15,7 +19,7 @@ const logger = winston.createLogger({
     ),
     transports: [
         new winston.transports.Console(),
-        new winston.transports.File({ filename: "split-flap.log" })
+        new winston.transports.File({ filename: logFilePath})
     ]
 });
 
