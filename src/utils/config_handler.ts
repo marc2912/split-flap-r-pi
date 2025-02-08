@@ -62,12 +62,13 @@ export const saveConfig = (config: Config): void => {
 // Update Raspberry Pi's Wi-Fi configuration
 export const updateWiFiConfig = (ssid: string, password: string): boolean => {
     const command = `nmcli dev wifi connect "${ssid}" password "${password}" ifname wlan1`;
+
     exec(command, (error, stdout, stderr) => {
         if (error) {
-        console.error("Error connecting to wifi:", stderr);
+        logger.error("Error connecting to wifi:", stderr);
         return false;
         }
-        console.log("Connected successfully:", stdout);
+        logger.log("Connected successfully:", stdout);
         return true;
     });
     return false;
