@@ -62,15 +62,15 @@ app.post("/tcp/send", async (req: Request, res: Response): Promise<void> => {
 
 // Start Express server
 const server = app.listen(PORT, () => {
-    logger.info(`REST API running on port ${PORT}`);
+    logger.info("REST API running on port " + PORT);
 });
 
 // Create TCP server
 const tcpServer = net.createServer((socket) => {
-    logger.info("Module connected:", {ip: socket.remoteAddress});
+    logger.info("Module connected - ip:" + socket.remoteAddress);
 
     socket.on("data", (data) => {
-        logger.info("Received from module:", {data: data.toString()});
+        logger.info("Received from module - data:", data.toString());
         // Handle data from module
     });
 
@@ -84,7 +84,7 @@ const tcpServer = net.createServer((socket) => {
 });
 
 tcpServer.listen(TCP_PORT, () => {
-    logger.info(`TCP server running on port ${TCP_PORT}`);
+    logger.info("TCP server running on port " + TCP_PORT);
 });
 
 export default app;

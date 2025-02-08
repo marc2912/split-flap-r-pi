@@ -33,7 +33,7 @@ export const loadConfig = (): Config => {
 
     while (fileExists(LOCK_FILE) && retries > 0) {
         retries--;
-        logger.info(`Waiting for lock file to be released... ${120 - retries}s / 120s`);
+        logger.info("Waiting for lock file to be released... "+ (120 - retries) + "s / 120s");
         Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 100); // ✅ Non-blocking sleep alternative
 
         if (retries === 0) {
@@ -88,7 +88,7 @@ network={
         // ✅ Overwrite with new config and reload Wi-Fi
         exec(`sudo cp /tmp/wpa_supplicant.conf ${WPA_SUPPLICANT_FILE} && sudo wpa_cli -i wlan0 reconfigure`, (error, stdout, stderr) => {
             if (error) {
-                logger.error(`Error restarting Wi-Fi: ${stderr}`);
+                logger.error("Error restarting Wi-Fi: ", stderr);
                 logger.info("Restoring previous Wi-Fi configuration...");
                 exec(`sudo cp /etc/wpa_supplicant/wpa_supplicant.conf.bak ${WPA_SUPPLICANT_FILE} && sudo wpa_cli -i wlan0 reconfigure`, (restoreError) => {
                     if (restoreError) {

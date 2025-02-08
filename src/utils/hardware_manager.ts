@@ -20,11 +20,11 @@ export const getConnectedMacAddresses = async (): Promise<string[]> => {
                 logger.error("Error fetching MAC addresses:", stderr);
                 return reject(error);
             }
-
+            var retValue = stdout;
             // Extract MAC addresses using regex
             const macRegex = /(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}/g;
-            const macAddresses = stdout.match(macRegex) || [];
-            logger.info(`Detected MACs: ${stdout}`);
+            const macAddresses = retValue.match(macRegex) || [];
+            logger.info("Detected MACs: " + retValue);
             // Get ESP32 MAC prefixes (cached or fetched)
             const esp32Prefixes = await getEsp32MacPrefixes();
 
@@ -33,7 +33,7 @@ export const getConnectedMacAddresses = async (): Promise<string[]> => {
                 esp32Prefixes.some(prefix => mac.startsWith(prefix))
             );
 
-            logger.info(`Detected ESP32 MACs: ${esp32Macs.join(", ")}`);
+            logger.info("Detected ESP32 MACs:" + esp32Macs.join(", "));
             resolve(esp32Macs);
         });
     });
@@ -86,7 +86,7 @@ export const getConnectedModuleCounts = async (): Promise<number> => {
             }
 
             const count = parseInt(stdout.trim(), 10) || 0;
-            logger.info(`Total connected modules: ${count}`);
+            logger.info("Total connected modules: " + count);
             resolve(count);
         });
     });
