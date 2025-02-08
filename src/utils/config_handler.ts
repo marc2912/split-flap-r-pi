@@ -1,4 +1,5 @@
 import fs from "fs";
+import util from "util";
 import path from "path";
 import { exec } from "child_process";
 import dotenv from "dotenv";
@@ -9,6 +10,8 @@ const {logger} = require("./logger");
 
 const CONFIG_FILE = path.join(__dirname, process.env.CONFIG_FILE || "../splitflap-config.json");
 const LOCK_FILE = path.join(__dirname, "../splitflap-config.lock");
+const execPromise = util.promisify(exec);
+
 
 interface Config {
     modules: { "module-mac-address": string }[];
@@ -60,18 +63,24 @@ export const saveConfig = (config: Config): void => {
 };
 
 // Update Raspberry Pi's Wi-Fi configuration
-export const updateWiFiConfig = (ssid: string, password: string): boolean => {
-    const command = `sudo nmcli dev wifi connect "${ssid}" password "${password}" ifname wlan1`;
-    logger.info("Connecting to Wi-Fi with command:" + command);
-    exec(command, (error, stdout, stderr) => {
-        if (error) {
-        logger.error("Error connecting to wifi: " + stderr);
-        return false;
+export const updateWiFiConfig = async (ssid: string, password: string): Promise<boolean> => {
+    try {
+        const command = `sudo nmcli dev wifi connect "${ssid}" password "${password}" ifname wlan1`;
+        logger.info("Connecting to Wi-Fi with command: " + command);
+
+        const { stdout, stderr } = await execPromise(command);
+
+        if (stderr) {
+            logger.error("Error connecting to wifi: " + stderr);
+            return false;
         }
-        logger.log("Connected successfully: " + stdout);
+
+        logger.info("Connected successfully: " + stdout);
         return true;
-    });
-    return false;
+    } catch (error) {
+        logger.error("Error executing Wi-Fi command: " + error);
+        return false;
+    }
 };
 
 // Checks to see if the Raspberry Pi is connected to a Wi-Fi network

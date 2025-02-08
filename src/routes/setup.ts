@@ -8,7 +8,7 @@ const router: express.Router = express.Router();
 let config = loadConfig();
 
 // Endpoint to set the Wi-Fi SSID and password from app.
-router.post("/ssid", (req: Request, res: Response) => {
+router.post("/ssid", async (req: Request, res: Response) => {
     if (config.pairingKey) {
         return res.status(403).json({ error: "SSID configuration is locked after pairing." });
     }
@@ -18,21 +18,18 @@ router.post("/ssid", (req: Request, res: Response) => {
         return res.status(400).json({ error: "SSID and password are required." });
     }
 
-    // Update Wi-Fi settings and restart networking
-    if (updateWiFiConfig(ssid, password)) {
-        return res.json({ message: "Wi-Fi SSID and password set successfully. Pi is connected." });
-    } else {
-        return res.status(500).json({ message: "Failed to connect to your home network." });
+    try {
+        const success = await updateWiFiConfig(ssid, password);
+        if (success) {
+            return res.json({ message: "Wi-Fi SSID and password set successfully. Pi is connected." });
+        } else {
+            return res.status(500).json({ message: "Failed to connect to your home network." });
+        }
+    } catch (error) {
+        logger.error("Wi-Fi configuration error:", error);
+        return res.status(500).json({ error: "Internal server error while updating Wi-Fi." });
     }
-
-    // // Check the pi's Wi-Fi connection status
-    // if (checkWifiConnection()) {
-    //     return res.json({ message: "Wi-Fi SSID and password set successfully. Pi is connected." });
-    // } else {
-    //     return res.status(500).json({ message: "Failed to connect to your home network." });
-    // }
 });
-
 
 // Endpoint to generate a pairing key
 router.post("/pairing", (req: Request, res: Response) => {
