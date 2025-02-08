@@ -22,8 +22,7 @@ export const validateAdminToken = (req: Request, res: Response, next: NextFuncti
     const adminToken = process.env.ADMIN_TOKEN || "";
     if (adminToken ===  "" || submittedToken !== adminToken) {
         logger.info("admin requested with invalid token: " + submittedToken);
-        res.status(401).json({ error: "Unauthorized" });
-        return false; 
+        return res.status(401).json({ error: "Unauthorized" });; 
     }
-    return true;
+    next();
 }
