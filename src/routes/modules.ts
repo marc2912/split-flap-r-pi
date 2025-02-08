@@ -1,13 +1,13 @@
 import express , { Request, Response } from "express";
 import { fetchNextAvailableModuleForSetup } from "../utils/module_manager";
-import { getConnectedMacAddresses, getConnectedModules } from "../utils/hardware_manager";
+import { getConnectedMacAddresses, getConnectedModuleCounts } from "../utils/hardware_manager";
 
 const router = express.Router();
 
 // Endpoint to get the total number of connected modules
 router.get("/total", async (req: Request, res: Response) => {
     try {
-        const totalModules = await getConnectedModules();
+        const totalModules = await getConnectedModuleCounts();
         const esp32Macs = await getConnectedMacAddresses();
 
         res.json({

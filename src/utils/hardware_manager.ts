@@ -22,7 +22,7 @@ export const getConnectedMacAddresses = async (): Promise<string[]> => {
             // Extract MAC addresses using regex
             const macRegex = /(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}/g;
             const macAddresses = stdout.match(macRegex) || [];
-
+            console.log(`Detected MACs: ${macAddresses.join(", ")}`);
             // Get ESP32 MAC prefixes (cached or fetched)
             const esp32Prefixes = await getEsp32MacPrefixes();
 
@@ -40,7 +40,7 @@ export const getConnectedMacAddresses = async (): Promise<string[]> => {
 /**
  * Fetches the latest ESP32 MAC prefixes from IEEE OUI list, with caching.
  */
-const getEsp32MacPrefixes = async (): Promise<string[]> => {
+export const getEsp32MacPrefixes = async (): Promise<string[]> => {
     const now = Date.now();
 
     // Use cached values if still valid
@@ -75,7 +75,7 @@ const getEsp32MacPrefixes = async (): Promise<string[]> => {
  * Returns the number of connected clients to wlan0 using `iw`.
  * More reliable than ARP-based counting.
  */
-export const getConnectedModules = async (): Promise<number> => {
+export const getConnectedModuleCounts = async (): Promise<number> => {
     return new Promise((resolve, reject) => {
         exec("iw dev wlan0 station dump | grep 'Station' | wc -l", (error, stdout, stderr) => {
             if (error) {

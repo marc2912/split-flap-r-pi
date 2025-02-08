@@ -31,6 +31,7 @@ interface SendPayloadBody {
 import setupRoutes from "./routes/setup";
 import moduleRoutes from "./routes/modules";
 import layoutRoutes from "./routes/layout";
+import adminRoutes from "./routes/admin";
 
 app.use(express.json()); 
 app.use(express.urlencoded({ extended: true })); // Handles URL-encoded data
@@ -39,6 +40,7 @@ app.use(express.urlencoded({ extended: true })); // Handles URL-encoded data
 app.use("/setup", setupRoutes);
 app.use("/modules", moduleRoutes);
 app.use("/layout", layoutRoutes);
+app.use("/admin", adminRoutes);
 
 // Endpoint to send a payload to a module
 app.post("/tcp/send", async (req: Request, res: Response): Promise<void> => {

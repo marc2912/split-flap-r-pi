@@ -13,7 +13,7 @@ elif [[ "$TERM" =~ "256color" ]]; then
 else
     BLUE_CUSTOM=''  
 fi
-
+CHANGED=false
 LOG_FILE="$HOME/split-flap-r-pi/splitflap_update.log"
 exec > >(tee -a "$LOG_FILE") 2>&1
 
@@ -68,17 +68,18 @@ if [[ "$FORCE_UPDATE" == "true" ]] || git diff --name-only HEAD@{1} HEAD | grep 
 else 
     echo -e "${BLUE_CUSTOM}Dependencies unchanged.${NC}"
 fi
- 
+
 # Rebuild the project only if necessary or forced
 if [[ "$FORCE_UPDATE" == "true" ]] || git diff --name-only HEAD@{1} HEAD | grep -q "src/\|dist/"; then
     echo -e "${BLUE_CUSTOM}Rebuilding project...${NC}"
     npm run build
+    CHANGED=true
 else
     echo -e "${BLUE_CUSTOM}No changes in source files. Skipping build.${NC}"
 fi
 
 # Restart the service if code changed or forced
-if [[ "$FORCE_UPDATE" == "true" ]] || git diff --name-only HEAD@{1} HEAD | grep -q "dist/"; then
+if [[ "$FORCE_UPDATE" == "true" ]] || CHANGED; then
     echo -e "${BLUE_CUSTOM}Restarting SplitFlap service...${NC}"
     systemctl --user restart splitflap.service
 else
