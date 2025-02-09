@@ -9,7 +9,7 @@ let config = loadConfig();
 
 // Endpoint to set the Wi-Fi SSID and password from app.
 router.post("/ssid", async (req: Request, res: Response) => {
-    if (config.pairingKey) {
+    if (config.pairingKey && config.pairingKey !== "") {
         return res.status(403).json({ error: "SSID configuration is locked after pairing." });
     }
 
