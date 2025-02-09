@@ -1,3 +1,4 @@
+import { log } from "console";
 import { loadConfig, saveConfig, updateWiFiConfig } from "../utils/config_handler";
 import express , { Request, Response } from "express";
 
@@ -9,7 +10,9 @@ let config = loadConfig();
 
 // Endpoint to set the Wi-Fi SSID and password from app.
 router.post("/ssid", async (req: Request, res: Response) => {
-    if (config.pairingKey && config.pairingKey !== "") {
+    
+    if (config.pairingKey && config.pairingKey.trim() !== "") {
+        logger.info("Current config pairing key value >" + config.pairingKey + "<.");
         return res.status(403).json({ error: "SSID configuration is locked after pairing." });
     }
 
