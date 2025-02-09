@@ -1,8 +1,10 @@
 import { exec } from "child_process";
-
 const {logger} = require("./logger");
+import util from "util";
 
 const IEEE_OUI_URL = "https://standards-oui.ieee.org/oui.txt";
+
+const execPromise = util.promisify(exec);
 
 // Cache variables
 let cachedEsp32Prefixes: string[] = [];
@@ -90,4 +92,27 @@ export const getConnectedModuleCounts = async (): Promise<number> => {
             resolve(count);
         });
     });
+};
+
+export const deleteConnectionByDevice = async (): Promise<boolean> => {
+    try {
+        const device = "wlan1";
+        // Get the connection name associated with the given device
+        const { stdout } = await execPromise(`nmcli -t -f NAME,DEVICE connection show | grep ":${device}" | cut -d: -f1`);
+        const connName = stdout.trim();
+
+        if (!connName) {
+            logger.info(`No connection found for device: wlan1`);
+            return true;
+        }
+
+        // Delete the connection
+        await execPromise(`sudo nmcli connection delete "${connName}"`);
+        logger.info("Deleted connection: " + connName + " on device: wlan1");
+        return true;
+    } catch (error: any) 
+    {
+        logger.error("Error deleting connection for wlan1: ", error);
+        return false;
+    }
 };

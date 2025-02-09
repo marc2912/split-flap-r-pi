@@ -1,5 +1,5 @@
 import express , { Request, Response } from "express";
-import { getEsp32MacPrefixes } from "../utils/hardware_manager";
+import { deleteConnectionByDevice, getEsp32MacPrefixes } from "../utils/hardware_manager";
 import { loadConfig, saveConfig } from "../utils/config_handler";
 
 const { logger } = require("../utils/logger");
@@ -12,10 +12,13 @@ router.post("/get-mac-prefixes", async (req: Request, res: Response) => {
 });
 
 router.post("/reset-env", async (req: Request, res: Response) => {
-
     logger.info("Resetting environment");
-    saveConfig({ modules: [], layout: [], pairingKey: "" });
-    res.json({ message: "Environment reset" });
+    if (await deleteConnectionByDevice()) {
+        saveConfig({ modules: [], layout: [], pairingKey: "" });
+        res.json({ message: "Environment reset" });
+    } else {
+        res.status(500).json({ message: "Error resetting environmen, check log file." });
+    }
 });
 
 export default router;
