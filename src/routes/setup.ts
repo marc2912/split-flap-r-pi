@@ -6,10 +6,11 @@ import express , { Request, Response } from "express";
 const {logger} = require("../utils/logger");
 const router: express.Router = express.Router();
 
-let config = loadConfig();
+
 
 // Endpoint to set the Wi-Fi SSID and password from app.
 router.post("/ssid", async (req: Request, res: Response) => {
+    let config = loadConfig();
     
     if (config.pairingKey && config.pairingKey.trim() !== "") {
         logger.info("Current config pairing key value >" + config.pairingKey + "<.");
