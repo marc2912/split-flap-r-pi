@@ -3,11 +3,12 @@ import net from "net";
 import { sendPayloadToModule } from "./utils/tcp_manager";
 import { validateAdminToken, validatePairingToken } from "./middlewares/authMiddleware"; 
 const { logger } = require("./utils/logger");
-
+import dotenv from "dotenv";
+dotenv.config();
 
 process.on("uncaughtException", (err) => {
     logger.error("🔥 Uncaught Exception:", err);
-    process.exit(1); // Exit to prevent corrupted state
+    process.exit(1);
 });
 
 process.on("unhandledRejection", (reason, promise) => {
@@ -16,11 +17,10 @@ process.on("unhandledRejection", (reason, promise) => {
 
 const app = express();
 const PORT: number = Number(process.env.PORT) || 3000;
-const TCP_PORT: number = 4000; // Port for module communication
+const TCP_PORT: number = 4000;
 
 app.use(express.json());
 
-// Define expected body structure
 interface SendPayloadBody {
     moduleIp: string;
     payload: {
@@ -29,22 +29,19 @@ interface SendPayloadBody {
     };
 }
 
-// Import routes
 import setupRoutes from "./routes/setup";
 import moduleRoutes from "./routes/modules";
 import layoutRoutes from "./routes/layout";
 import adminRoutes from "./routes/admin";
 
 app.use(express.json()); 
-app.use(express.urlencoded({ extended: true })); // Handles URL-encoded data
+app.use(express.urlencoded({ extended: true }));
 
-// Use routes
 app.use("/setup", setupRoutes);
 app.use("/modules", validatePairingToken, moduleRoutes);
 app.use("/layout",validatePairingToken, layoutRoutes);
 app.use("/admin", validateAdminToken, adminRoutes);
 
-// Endpoint to send a payload to a module
 app.post("/tcp/send", async (req: Request, res: Response): Promise<void> => {
     const body = req.body as { moduleIp: string; payload: { display: string; speed: number } };
 
@@ -61,18 +58,15 @@ app.post("/tcp/send", async (req: Request, res: Response): Promise<void> => {
     }
 });
 
-// Start Express server
 const server = app.listen(PORT, () => {
     logger.info("REST API running on port " + PORT);
 });
 
-// Create TCP server
 const tcpServer = net.createServer((socket) => {
     logger.info("Module connected - ip:" + socket.remoteAddress);
 
     socket.on("data", (data) => {
         logger.info("Received from module - data:", data.toString());
-        // Handle data from module
     });
 
     socket.on("end", () => {

@@ -10,7 +10,7 @@ const logger = winston.createLogger({
     level: "info",
     format: winston.format.combine(
         winston.format.timestamp(),
-        winston.format.errors({ stack: true }), // ✅ Auto logs error stack traces
+        winston.format.errors({ stack: true }), 
         winston.format.printf((info : Logform.TransformableInfo) => 
             info.stack 
                 ? `${info.timestamp} [${info.level}]: ${info.message}\n${info.stack}`

@@ -2,9 +2,6 @@ import fs from "fs";
 import util from "util";
 import path from "path";
 import { exec } from "child_process";
-import dotenv from "dotenv";
-
-dotenv.config();
 const {logger} = require("./logger");
 
 
